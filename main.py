@@ -1,25 +1,17 @@
-from asyncio.exceptions import TimeoutError
-from asyncio import Future
 import asyncio
-import requests
 
-from utils import delay, get_timestamp, async_timed
+import aiohttp
+from aiohttp import ClientSession 
 
-
-@async_timed()
-async def get_example_status():
-    return requests.get("http://www.example.com").status_code
-
+from util import async_timed
+from chapter_4 import fetch_status
 
 @async_timed()
 async def main():
-    task_1 = asyncio.create_task(get_example_status())
-    task_2 = asyncio.create_task(get_example_status())
-    task_3 = asyncio.create_task(get_example_status())
-
-    await task_1
-    await task_2
-    await task_3
-
+    async with aiohttp.ClientSession() as session:
+        urls = ['https://example.ru' for _ in range(15)]
+        requests = [fetch_status(session, url, 10) for url in urls]
+        status_codes = await asyncio.gather(*requests)
+        print(status_codes)
 
 asyncio.run(main())
